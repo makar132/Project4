@@ -1,0 +1,76 @@
+{
+  "project_info": {
+    "project_number": "723650277289",
+    "project_id": "location-reminder-35419",
+    "storage_bucket": "location-reminder-35419.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:723650277289:android:1b366915694bb2c4fddeb8",
+        "android_client_info": {
+          "package_name": "com.udacity.project4"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "723650277289-ponuortkv593s0kopol7dm3alv0o9t2t.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCSXeNnCoC6caFENuzlCfo1xDcY7oDVFZs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "723650277289-ponuortkv593s0kopol7dm3alv0o9t2t.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:723650277289:android:80bfe6df9ed0edfafddeb8",
+        "android_client_info": {
+          "package_name": "com.udacity.project4.authentication"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "723650277289-as8vvjnkf7a5cjub3okn7auee4nh0k3g.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.udacity.project4.authentication",
+            "certificate_hash": "bb72b86986d47eec68626d952fbc2e339a6e2fea"
+          }
+        },
+        {
+          "client_id": "723650277289-ponuortkv593s0kopol7dm3alv0o9t2t.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCSXeNnCoC6caFENuzlCfo1xDcY7oDVFZs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "723650277289-ponuortkv593s0kopol7dm3alv0o9t2t.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
