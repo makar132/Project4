@@ -3,7 +3,12 @@ package com.udacity.project4.locationreminders.savereminder.selectreminderlocati
 
 //import com.udacity.project4.utils.setDisplayHomeAsUpEnabled
 //import com.udacity.project4.utils.setDisplayHomeAsUpEnabled
+import android.Manifest
 import android.annotation.SuppressLint
+import android.app.Activity
+import android.content.Intent
+import android.content.IntentSender
+import android.content.pm.PackageManager
 import android.content.res.Resources
 import android.location.Location
 import android.os.Build
@@ -11,14 +16,19 @@ import android.os.Bundle
 import android.util.Log
 import android.view.*
 import androidx.annotation.RequiresApi
+import androidx.core.app.ActivityCompat
 import androidx.databinding.DataBindingUtil
+import com.google.android.gms.common.api.ResolvableApiException
 import com.google.android.gms.location.FusedLocationProviderClient
+import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationServices
+import com.google.android.gms.location.LocationSettingsRequest
 import com.google.android.gms.maps.CameraUpdateFactory.newLatLngZoom
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.*
+import com.google.android.material.snackbar.Snackbar
 import com.udacity.project4.R
 import com.udacity.project4.base.BaseFragment
 import com.udacity.project4.base.NavigationCommand
@@ -55,7 +65,6 @@ class SelectLocationFragment : OnMapReadyCallback, GoogleMap.OnMarkerClickListen
          }*/
 
         //TODO: add the map setup implementation
-
         val mapFragment = childFragmentManager.findFragmentById(R.id.map) as SupportMapFragment
         mapFragment.getMapAsync(this)
 
@@ -165,6 +174,11 @@ class SelectLocationFragment : OnMapReadyCallback, GoogleMap.OnMarkerClickListen
                         )
                     )
                 }
+                map.setOnMyLocationButtonClickListener {
+                    mapToCurrentLocation()
+                    true
+                }
+                map.setOnMyLocationClickListener { }
 
                 val initialMarkerLatLng = LatLng(37.4221, -122.0841)//googleplex coordinates
                 map.addMarker(MarkerOptions().position(initialMarkerLatLng).title("googleplex"))
@@ -176,11 +190,11 @@ class SelectLocationFragment : OnMapReadyCallback, GoogleMap.OnMarkerClickListen
 
     }
 
-
     @SuppressLint("MissingPermission")
-    fun mapToCurrentLocation() {
+    fun getAndFoucsCurrentLocation() {
+
+
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(requireActivity())
-        map.isMyLocationEnabled = true
         fusedLocationClient.lastLocation
             .addOnSuccessListener { location: Location? ->
                 // Got last known location. In some rare situations this can be null.
@@ -194,7 +208,18 @@ class SelectLocationFragment : OnMapReadyCallback, GoogleMap.OnMarkerClickListen
                 }
             }
 
+        //clear the flag to be ready to check if Location setting is changed
+        // for the next time the user wants to get the location
+
+        LOCATION_SETTING_STATUS = false
     }
+
+    @SuppressLint("MissingPermission")
+    fun mapToCurrentLocation() {
+        requestForegroundLocationPermission()
+
+    }
+
 
     private fun setSelectedPOI(POI: PointOfInterest) {
         _viewModel.selectedPOI.postValue(POI)
@@ -219,5 +244,100 @@ TODO:make use of this function to give more detailed address data
 
     }
 
+    private fun requestForegroundLocationPermission() {
+        if (ActivityCompat.checkSelfPermission(
+                requireActivity(),
+                Manifest.permission.ACCESS_FINE_LOCATION
+            ) == PackageManager.PERMISSION_GRANTED
+        ) {
+            map.isMyLocationEnabled = true
+            requestLocationSetting()
+        } else {
+            requestPermissions(
+                arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
+                REQUEST_FOREGROUND_LOCATION_PERMISSION
+            )
+        }
+    }
+
+
+    @SuppressLint("MissingPermission")
+    @RequiresApi(Build.VERSION_CODES.Q)
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
+
+        when (requestCode) {
+            REQUEST_FOREGROUND_LOCATION_PERMISSION -> {
+                if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    map.isMyLocationEnabled = true
+                    requestLocationSetting()
+                } else {
+                    Snackbar.make(
+                        binding.root,
+                        "Please grant location permission",
+                        Snackbar.LENGTH_INDEFINITE
+                    ).setAction("ENABLE") {
+                        requestForegroundLocationPermission()
+                    }.show()
+                }
+            }
+
+
+        }
+
+    }
+
+    private fun requestLocationSetting() {
+        //TODO("Not yet implemented")
+        val locationRequest = LocationRequest.create().apply {
+            interval = 10000
+            fastestInterval = 5000
+            priority = LocationRequest.PRIORITY_HIGH_ACCURACY
+        }
+        val builder = LocationSettingsRequest.Builder().addLocationRequest(locationRequest)
+        val client = LocationServices.getSettingsClient(requireActivity())
+        val task = client.checkLocationSettings(builder.build())
+        task.addOnSuccessListener {
+            getAndFoucsCurrentLocation()
+        }
+        task.addOnFailureListener { exception ->
+            if (exception is ResolvableApiException) {
+                // Location settings are not satisfied, but this can be fixed by showing the user a dialog.
+                try {
+                    // Show the dialog by calling startResolutionForResult(), and check the result in onActivityResult().
+                    exception.startResolutionForResult(
+                        requireActivity(),
+                        REQUEST_CHECK_SETTINGS
+                    )
+                } catch (sendEx: IntentSender.SendIntentException) {
+                    // Ignore the error.
+                }
+            }
+        }
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        when (requestCode) {
+            REQUEST_CHECK_SETTINGS -> {
+                if (resultCode == Activity.RESULT_OK) {
+                    getAndFoucsCurrentLocation()
+                }
+            }
+        }
+    }
+
+
+    companion object {
+
+
+        private const val REQUEST_FOREGROUND_LOCATION_PERMISSION = 1
+        private var FOREGROUND_LOCATION_PERMISSION_STATUS = false
+        private var LOCATION_SETTING_STATUS = false
+        private const val REQUEST_CHECK_SETTINGS = 2
+    }
 
 }
