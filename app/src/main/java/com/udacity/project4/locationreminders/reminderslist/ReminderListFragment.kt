@@ -63,7 +63,7 @@ class ReminderListFragment : BaseFragment() {
         setupRecyclerView()
 
         binding.addReminderFAB.setOnClickListener {
-            requestPermission()
+            navigateToAddReminder()
         }
     }
 
@@ -106,68 +106,5 @@ class ReminderListFragment : BaseFragment() {
 //        display logout as menu item
         inflater.inflate(R.menu.main_menu, menu)
     }
-
-    @RequiresApi(Build.VERSION_CODES.Q)
-    private fun requestPermission() {
-        if (ActivityCompat.checkSelfPermission(
-                requireActivity(),
-                Manifest.permission.ACCESS_FINE_LOCATION
-            ) == PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(
-                requireActivity(),
-                Manifest.permission.ACCESS_BACKGROUND_LOCATION
-            ) == PackageManager.PERMISSION_GRANTED
-        ) {
-            navigateToAddReminder()
-        } else {
-            requestPermissions(
-                arrayOf(
-                    Manifest.permission.ACCESS_FINE_LOCATION,
-                    Manifest.permission.ACCESS_BACKGROUND_LOCATION
-                ),
-                LOCATION_REQUEST_CODE
-            )
-
-        }
-        // TODO: Consider calling
-        //    ActivityCompat#requestPermissions
-        // here to request the missing permissions, and then overriding
-        //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-        //                                          int[] grantResults)
-        // to handle the case where the user grants the permission. See the documentation
-        // for ActivityCompat#requestPermissions for more details.
-    }
-
-    @RequiresApi(Build.VERSION_CODES.Q)
-    override fun onRequestPermissionsResult(
-        requestCode: Int,
-        permissions: Array<out String>,
-        grantResults: IntArray
-    ) {
-
-        when (requestCode) {
-            LOCATION_REQUEST_CODE -> {
-                if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED && grantResults[1] == PackageManager.PERMISSION_GRANTED) {
-                    navigateToAddReminder()
-
-                } else {
-                    Snackbar.make(
-                        binding.root,
-                        "Please grant location permission",
-                        Snackbar.LENGTH_INDEFINITE
-                    ).setAction("ENABLE") {
-                        requestPermission()
-                    }.show()
-
-                }
-            }
-
-        }
-
-    }
-
-    companion object {
-        private const val LOCATION_REQUEST_CODE = 0
-    }
-
 
 }

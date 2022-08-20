@@ -7,8 +7,7 @@ import androidx.test.core.app.ActivityScenario
 import androidx.test.core.app.ApplicationProvider.getApplicationContext
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.IdlingRegistry
-import androidx.test.espresso.action.ViewActions.click
-import androidx.test.espresso.action.ViewActions.typeText
+import androidx.test.espresso.action.ViewActions.*
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.RootMatchers
 import androidx.test.espresso.matcher.ViewMatchers.*
@@ -109,8 +108,12 @@ class RemindersActivityTest :
     @Test
     fun test() = runBlocking {
         var myActivity: RemindersActivity? = null
-        val activityScenario = ActivityScenario.launch(RemindersActivity::class.java)
+        val activityScenario = ActivityScenario.launch(RemindersActivity::class.java).onActivity {
+            myActivity = it
+        }
         dataBindingIdlingResource.monitorActivity(activityScenario)
+        //Espresso.closeSoftKeyboard()
+        //ViewActions.closeSoftKeyboard()
         onView(withId(remindersActivity)).check(matches(isDisplayed()))
         onView(withId(noDataTextView)).check(matches(isDisplayed()))
         onView(withId(addReminderFAB)).perform(click())
@@ -123,9 +126,10 @@ class RemindersActivityTest :
         onView(withId(snackbar_text)).check(matches(isDisplayed()))
         onView(withId(snackbar_text)).check(matches(withText(R.string.err_enter_title)))
         SystemClock.sleep(3000)
-        onView(withId(reminderTitle)).perform(typeText("title"))
+        onView(withId(reminderTitle)).perform(typeText("title")).perform(closeSoftKeyboard())
             .check(matches(withText("title")))
         onView(withId(reminderDescription)).perform(typeText("description"))
+            .perform(closeSoftKeyboard())
             .check(matches(withText("description")))
 
         saveButtonViewInteraction.perform(click())

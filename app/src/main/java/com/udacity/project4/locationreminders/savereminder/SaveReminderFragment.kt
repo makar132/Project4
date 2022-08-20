@@ -1,17 +1,23 @@
 package com.udacity.project4.locationreminders.savereminder
 
+import android.Manifest
 import android.annotation.SuppressLint
 import android.app.PendingIntent
 import android.content.Intent
+import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.annotation.RequiresApi
+import androidx.core.app.ActivityCompat
 import androidx.databinding.DataBindingUtil
 import com.google.android.gms.location.Geofence
 import com.google.android.gms.location.GeofencingClient
 import com.google.android.gms.location.GeofencingRequest
 import com.google.android.gms.location.LocationServices
+import com.google.android.material.snackbar.Snackbar
 import com.udacity.project4.R
 import com.udacity.project4.base.BaseFragment
 import com.udacity.project4.base.NavigationCommand
@@ -50,14 +56,15 @@ class SaveReminderFragment : BaseFragment() {
         return binding.root
     }
 
+    @RequiresApi(Build.VERSION_CODES.Q)
     @SuppressLint("MissingPermission")
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         binding.lifecycleOwner = this
         binding.selectLocation.setOnClickListener {
             //            Navigate to another fragment to get the user location
-            _viewModel.navigationCommand.value =
-                NavigationCommand.To(SaveReminderFragmentDirections.actionSaveReminderFragmentToSelectLocationFragment())
+            requestPermission()
+
         }
 
         binding.saveReminder.setOnClickListener {
@@ -103,13 +110,80 @@ class SaveReminderFragment : BaseFragment() {
         }
     }
 
+    private fun navigateToSelectLocation() {
+        //use the navigationCommand live data to navigate between the fragments
+        _viewModel.navigationCommand.postValue(
+            NavigationCommand.To(SaveReminderFragmentDirections.actionSaveReminderFragmentToSelectLocationFragment())
+        )
+    }
+
     override fun onDestroy() {
         super.onDestroy()
         //make sure to clear the view model after destroy, as it's a single view model.
         _viewModel.onClear()
     }
 
+    @RequiresApi(Build.VERSION_CODES.Q)
+    private fun requestPermission() {
+        if (ActivityCompat.checkSelfPermission(
+                requireActivity(),
+                Manifest.permission.ACCESS_FINE_LOCATION
+            ) == PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(
+                requireActivity(),
+                Manifest.permission.ACCESS_BACKGROUND_LOCATION
+            ) == PackageManager.PERMISSION_GRANTED
+        ) {
+            navigateToSelectLocation()
+        } else {
+            requestPermissions(
+                arrayOf(
+                    Manifest.permission.ACCESS_FINE_LOCATION,
+                    Manifest.permission.ACCESS_BACKGROUND_LOCATION
+                ),
+                LOCATION_REQUEST_CODE
+            )
+
+        }
+        // TODO: Consider calling
+        //    ActivityCompat#requestPermissions
+        // here to request the missing permissions, and then overriding
+        //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+        //                                          int[] grantResults)
+        // to handle the case where the user grants the permission. See the documentation
+        // for ActivityCompat#requestPermissions for more details.
+    }
+
+    @RequiresApi(Build.VERSION_CODES.Q)
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
+
+        when (requestCode) {
+            LOCATION_REQUEST_CODE -> {
+                if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED && grantResults[1] == PackageManager.PERMISSION_GRANTED) {
+                    navigateToSelectLocation()
+
+                } else {
+                    Snackbar.make(
+                        binding.root,
+                        "Please grant location permission",
+                        Snackbar.LENGTH_INDEFINITE
+                    ).setAction("ENABLE") {
+                        requestPermission()
+                    }.show()
+
+                }
+            }
+
+        }
+
+    }
+
+
     companion object {
         const val GEOFENCE_RADIUS_IN_METERS = 40f//recommended 20-50
+        private const val LOCATION_REQUEST_CODE = 0
     }
 }

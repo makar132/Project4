@@ -119,6 +119,11 @@ class SelectLocationFragment : OnMapReadyCallback, GoogleMap.OnMarkerClickListen
         else -> super.onOptionsItemSelected(item)
     }
 
+    /*
+    * I don't need to request any permissions as i am already sure needed permissions are granted in the SaveReminderFragment
+    * i Don't request Permissions here Because it causes the map loading failures
+    * until a later reopen of this fragment then every this works as expected
+    * */
     @RequiresApi(Build.VERSION_CODES.Q)
     override fun onMapReady(p0: GoogleMap?) {
 
@@ -146,6 +151,19 @@ class SelectLocationFragment : OnMapReadyCallback, GoogleMap.OnMarkerClickListen
                     map.addMarker(MarkerOptions().position(it.latLng).title(it.name))
                         .showInfoWindow()
                     setSelectedPOI(it)
+                }
+                map.setOnMapLongClickListener {
+                    map.clear()
+                    map.addMarker(
+                        MarkerOptions().position(it).title(getString(R.string.dropped_pin))
+                    )
+                    setSelectedPOI(
+                        PointOfInterest(
+                            it,
+                            getString(R.string.lat_long_snippet, it.latitude, it.longitude),
+                            getString(R.string.dropped_pin)
+                        )
+                    )
                 }
 
                 val initialMarkerLatLng = LatLng(37.4221, -122.0841)//googleplex coordinates

@@ -36,6 +36,7 @@ class RemindersLocalRepositoryTest {
     private lateinit var db: RemindersDatabase
     private lateinit var remindersDao: RemindersDao
     private lateinit var remindersLocalRepository: RemindersLocalRepository
+
     @Before
     fun registerIdlingResource() {
         IdlingRegistry.getInstance().register(EspressoIdlingResource.countingIdlingResource)
@@ -45,6 +46,7 @@ class RemindersLocalRepositoryTest {
     fun unregisterIdlingResource() {
         IdlingRegistry.getInstance().unregister(EspressoIdlingResource.countingIdlingResource)
     }
+
     @Before
     fun setUp() {
         db = Room.inMemoryDatabaseBuilder(
@@ -90,6 +92,25 @@ class RemindersLocalRepositoryTest {
     }
 
     @Test
+    fun getReminderById_dataNotFound_shouldReturnError() = runBlockingTest {
+        val reminder =
+            ReminderDTO("title1", "description1", "location1", null, null)
+
+        //try to get a reminder that isn't inserted in the database
+        val result = remindersLocalRepository.getReminder(reminder.id)
+        var loaded: ReminderDTO? = null
+        if (result is Result.Success<*>) {
+            loaded = (result.data as ReminderDTO)
+        }
+        //testing that loaded is null is enough
+        // as if the result was success loaded will contain the retrieved data
+        //but as i got a bad comment on this part in last review i added it :)
+        assertThat(loaded, `is`(nullValue()))
+        assertThat(result.toString(), `is`(Result.Error("Reminder not found!").toString()))
+
+    }
+
+    @Test
     fun getReminderById() = runBlockingTest {
         val reminder =
             ReminderDTO("title1", "description1", "location1", null, null)
@@ -105,19 +126,6 @@ class RemindersLocalRepositoryTest {
         assertThat(loaded, `is`(reminder))
     }
 
-    @Test
-    fun getReminderById_notFound_shouldReturnError() = runBlockingTest {
-        val reminder =
-            ReminderDTO("title1", "description1", "location1", null, null)
-
-
-        val result = remindersLocalRepository.getReminder(reminder.id)
-        var loaded: ReminderDTO? = null
-        if (result is Result.Success<*>) {
-            loaded = (result.data as ReminderDTO)
-        }
-        assertThat(loaded, `is`(nullValue()))
-    }
 
     @Test
     fun deleteAllReminders() = runBlockingTest {
